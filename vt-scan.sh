@@ -6,7 +6,7 @@
 # jynxified@proton.me
 # 
 # History:
-# 1.0.0 (2026-07-13) - Initial version
+# 1.0.0 (2026-07-26) - Initial version
 #
 # Disclaimer:
 # This script is provided "as is" without any warranty of any kind, either expressed or implied.
@@ -104,8 +104,8 @@ function showHelp {
     echo -e "\t\t\t\tfor each executed processing step. Displays even more information"
     echo -e "\t\t\t\tthan -v | --verbose."
     echo    
-    echo -e "  ${MAGENTA}-l, --log FILE${NC}\t\t${BOLD}OPTIONAL${NC}. Writes all debug and trace messages to the specified log file"
-    echo -e "\t\t\t\tinstead of printing them to the console. This option only takes"
+    echo -e "  ${MAGENTA}-l, --log FILE${NC}\t\t${BOLD}OPTIONAL${NC}. Writes all debug and trace messages to the specified log"
+    echo -e "\t\t\t\tfile instead of printing them to the console. This option only takes"
     echo -e "\t\t\t\teffect if the -v or -vv option is also used."
     echo
     echo -e "Licensed under ${BOLD}CC BY-NC-ND 4.0${NC} (https://creativecommons.org/licenses/by-nc-nd/4.0/)"
@@ -113,6 +113,10 @@ function showHelp {
 
 #
 # Validates an input parameter.
+# 
+# Input parameters:
+#  - [1] : The name of the input parameter.
+#  - [2] : The value of the input parameter.
 #
 function validateParam {
 
@@ -124,6 +128,7 @@ function validateParam {
         exit 1
     fi
 }
+
 
 # Parse input parameters. 
 while [[ $# -gt 0 ]]
@@ -189,9 +194,6 @@ done
 #  - [1] : Verbose level (0=info, 1=debug, 2=trace)
 #  - [2] : The log message
 #
-# Return values:
-#  -none-
-#
 function logMessage {
 
     VERBOSE_LEVEL=$1
@@ -224,13 +226,13 @@ function checkForExistingReport {
     API_KEY=$1
     FILE=$2
     
-    CHECKSUM=$(sha256sum $FILE | sed 's/ .*$//g')
+    CHECKSUM=$(sha256sum "$FILE" | sed 's/ .*$//g')
     URL="$VT_URL/$CHECKSUM"
 
     logMessage 2 "${BLUE}[ SCAN ]${NC} Calling URL: $URL"
 
     RESPONSE=$(curl -s --request GET \
-        --url $URL/bla \
+        --url $URL/$CHECKSUM \
         --header "x-apikey: $API_KEY")
     
     ERROR_CODE=$?
@@ -358,7 +360,7 @@ function scanFile {
     FILE=$2
 
     # Search for existing VT scan report.
-    CHECKSUM=$(sha256sum $FILE | sed 's/ .*$//g')
+    CHECKSUM=$(sha256sum "$FILE" | sed 's/ .*$//g')
     
     logMessage 2 "${BLUE}[ SCAN ]${NC} Verifying whether a VirusTotal scan report exists: ${BLUE}$VT_URL/$CHECKSUM${NC}"
     
@@ -385,7 +387,7 @@ function scanFile {
         
         logMessage 2 "${BLUE}[ SCAN ]${NC} File was not uploaded to VirusTotal yet."
 
-        uploadFile $API_KEY $FILE
+        uploadFile $API_KEY "$FILE"
         RC_CODE=$?
 
         if [[ $RC_CODE == 0 ]]
@@ -444,7 +446,7 @@ function scanFile {
         
         return 0 # Scan successful
     
-    elif [[ $(echo "$VT_SCAN_RESPONSE" | fgrep -c "QuotaExceededError") != 0 ]]
+    elif [[ $(echo "$VT_SCAN_RESPONSE" | egrep -c "(QuotaExceededError|429 Too Many Requests)") != 0 ]]
     then
     
         echo -e "${RED}You exceeded the maximum number of allowed requests for your VirusTotal account. Use -t|--throttle or wait for the rate limit to reset.${NC}"
@@ -471,7 +473,7 @@ then
     exit 1
 fi
 
-if [ ! -e $P_API_KEY_FILE ]
+if [ ! -e "$P_API_KEY_FILE" ]
 then
     echo -e "${RED}API key file does not exist:${NC} $P_API_KEY_FILE"
     exit 1
@@ -479,7 +481,7 @@ fi
 
 logMessage 2 "${BLUE}[ INIT ]${NC} Reading API key from file: ${BLUE}$P_API_KEY_FILE${NC}"
 
-VT_API_KEY=$(cat $P_API_KEY_FILE | egrep "[a-z0-9]+" | head -n 1)
+VT_API_KEY=$(cat "$P_API_KEY_FILE" | egrep "[a-z0-9]+" | head -n 1)
 if [ "$VT_API_KEY" == "" ]
 then
     echo -e "${RED}No valid API key found in file:${NC} $P_API_KEY_FILE"
@@ -493,7 +495,10 @@ logMessage 2 "${BLUE}[ INIT ]${NC} VirusTotal API key: ${YELLOW}$VT_API_KEY${NC}
 #
 for TARGET_PATH in "${P_PATHS[@]}"
 do
-    P_FILES+=($(find "$TARGET_PATH" -type f -maxdepth $P_MAXDEPTH 2>/dev/null))
+    while IFS= read -r FILE
+    do
+        P_FILES+=("$FILE")
+    done < <(find "$TARGET_PATH" -maxdepth $P_MAXDEPTH -type f 2>/dev/null)
 done
 
 if [[ "${#P_FILES[@]}" == 0 ]]
@@ -520,7 +525,7 @@ do
     logMessage 1 "${BLUE}[ SCAN ]${NC} ${BOLD}Scanning #$PROCESSED_PATHS_CNTR${NC}: ${BLUE}$FILE${NC}"
 
     # Skip all paths that do not exist.
-    if [[ (! -e $FILE) || (-d $FILE) ]]
+    if [[ (! -e "$FILE") || (-d "$FILE") ]]
     then
         logMessage 1 "${BLUE}[ SCAN ]${NC} ${YELLOW}Skipping, path does not exist or is not a file.${NC}"
         continue
@@ -532,7 +537,7 @@ do
     while :
     do
     
-        scanFile $VT_API_KEY $FILE
+        scanFile $VT_API_KEY "$FILE"
         RC_CODE=$?
         
         if [[ "$RC_CODE" == 1 ]]
