@@ -235,7 +235,7 @@ Obviously, it's a CSV-formatted line, like I said before. The interesting part, 
 Malicious __ /   |  |   \__ Harmless
 hits             |  |       hits
                  |  |
-   Suspicious __/    \__ Untectected
+   Suspicious __/    \__ Undetected
    hits                  hits
 ```
 
