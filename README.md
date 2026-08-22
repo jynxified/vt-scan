@@ -312,6 +312,10 @@ What a brilliant transition: here is my contact info in case you want to get in,
 
 [jynxified@proton.me](jynxified@proton.me)
 
+Also, check out my BLOG for news about Cybersecurity, Security Vulnerabilities, and whatever buzzword-stuffed IT trend it takes to fill the gaps:
+
+[https://jynxified.wordpress.com/](https://jynxified.wordpress.com/)
+
 ## ## History
 
 * **1.0.0 (2026-07-26):** Initial version.
