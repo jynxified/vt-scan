@@ -11,7 +11,7 @@
 # Disclaimer:
 # This script is provided "as is" without any warranty of any kind, either expressed or implied.
 # Use it entirely at your own risk. The author (that's me) shall not be liable for any damages,
-# data loss, system failures, or serious trouble you, your relatives, their neighbours or beloved
+# data loss, system failures, or serious trouble you, your relatives, their neighbors or beloved
 # pets might get into caused by the use or misuse of this script.
 #
 # Licensed under "CC BY-NC-ND 4.0" (https://creativecommons.org/licenses/by-nc-nd/4.0/).
@@ -31,6 +31,11 @@ YELLOW="\e[33m"
 GREY="\e[90m"
 BLINK="\e[5m"
 NC="\e[0m"
+
+# Icons
+ICON_MAIL="\U0001F4E7"
+ICON_GITHUB="\u2699\uFE0F"
+ICON_BLOG="\U0001F310"
 
 # Variables
 P_API_KEY_FILE=""
@@ -68,9 +73,14 @@ SUSPICIOUS_FILES=()
 function showHelp {
 
     echo
-    echo -e "${BOLD}Scan files for malware using the VirusTotal web API${NC}"
-    echo
-    echo -e "...::: Version 1.0.0 | ${YELLOW}@${BLUE}Jynx${NC} | jynxified@proton.me | ${BLUE}https://github.com/jynxified${NC} :::..."
+    
+    echo -e "----------------------------------------------------------------------------------"
+    echo -e "                        ${BOLD}Malware Scan Using VirusTotal API${NC}"
+    echo -e "----------------------------------------------------------------------------------"
+    echo -e "                                  ${BOLD}Version 1.0.0${NC}"
+    echo -e "----------------------------------------------------------------------------------"
+    echo -e "    ${ICON_MAIL}jynxified@proton.me | ${ICON_GITHUB} ${BLUE}github.com/jynxified${NC} | ${ICON_BLOG}${BLUE}jynxified.wordpress.com${NC}"
+    echo -e "----------------------------------------------------------------------------------"
     echo
     echo -e "Usage: vt-scan ${MAGENTA}OPTIONS${NC} ${YELLOW}PATH|PATTERN${NC} [${YELLOW}PATH|PATTERN${NC} ...]"
     echo

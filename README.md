@@ -292,7 +292,7 @@ As I said: in the end, all of this can mean everything and nothing. What's cruci
 
 ## ## Disclaimer
 
-**vt-scan** is provided "as is" without any warranty of any kind, either expressed or implied. Use it entirely at your own risk. The author (that's me) shall not be liable for any damages, data loss, system failures, or serious trouble you, your relatives, their neighbours or beloved pets might get into caused by the use or misuse of it.
+**vt-scan** is provided "as is" without any warranty of any kind, either expressed or implied. Use it entirely at your own risk. The author (that's me) shall not be liable for any damages, data loss, system failures, or serious trouble you, your relatives, their neighbors or beloved pets might get into caused by the use or misuse of it.
 
 Of course the author (me again), too, assumes no liability whatsoever for any results provided by VirusTotal or this script, nor for any consequences arising from them. Both, VirusTotal and this script, merely offer hints as to whether a file might contain malware or not. Conversely, this doesn't mean you can blindly trust every "YouAreDoomed.exe" or binary from shady sources. You still need to keep your brain turned on. If you don't, you alone bear the consequences.
 
