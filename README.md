@@ -6,7 +6,7 @@
                    \ V /| |_       \__ \ (_| (_| | | | |
                     \_/  \__|      |___/\___\__,_|_| |_|
 
-                      ::: Version 1.0.0 | @Jynx :::
+                      ::: Version 1.1.0 | @Jynx :::
                
  Mail_                 GitHub_                        BLOG_
  jynxified@proton.me | https://github.com/jynxified | https://jynxified.wordpress.com
@@ -14,7 +14,7 @@
 ```
 
 # ## vt-scan
-**vt-scan** is a Bash script designed to easily check individual files or entire directories for malware using the **VirusTotal web API**.
+**vt-scan** is a Bash script designed to easily check individual files or entire directories for malware using the **VirusTotal™ web API**.
 
 In case you are scratching your head wondering, "What on earth is VirusTotal?", it begs the question of why you are reading this README in the first place. But hey, don't worry, I'm here to help.
 
@@ -36,6 +36,12 @@ Here's how an exemplary run of **vt-scan** looks like:
 - **Almost feels like cheating:** Supports wildcards and directory paths, allowing you to scan multiple files all at once without the need of specifying them one by one.
 - **Slow down, cowboy:** Includes built-in request throttling to artificially delay scans, helping you stay safely within VirusTotal’s daily or per-minute API caps. (Yes, there are limits! See [here](https://docs.virustotal.com/reference/public-vs-premium-api) for more information.)
 - **That comes in handy:** Outputs data in CSV format, making it effortless to parse and process.
+
+## ## What's new in Version 1.1.0?
+
+Step right up, folks, don't be shy! Get your hands on the freshest, absolute best features on the entire planet.
+
+* **Work-life balance:** The new `-s|--stop-on-match` option stops scanning the moment a hit is found. That way, you can immediately start panicking and running around in circles.
 
 ## ## Prerequisites
 
@@ -164,6 +170,20 @@ Example:
 
 ```
 vt-scan -a ./myAPIkey.txt -m 7 ./somedir/
+```
+
+#### Stop scanning on first match
+
+```
+-s, --stop-on-match
+```
+
+This option tells the scan to stop immediately on the first match (suspicious or malicious). If you omit it, **vt-scan** will still report any matches, but it won't stop until it has scanned every single file you passed to it.
+
+Example:
+
+```
+vt-scan -a ./myAPIkey.txt -s someFile.exe
 ```
 
 #### Activating Debug mode
@@ -296,7 +316,12 @@ As I said: in the end, all of this can mean everything and nothing. What's cruci
 
 Of course the author (me again), too, assumes no liability whatsoever for any results provided by VirusTotal or this script, nor for any consequences arising from them. Both, VirusTotal and this script, merely offer hints as to whether a file might contain malware or not. Conversely, this doesn't mean you can blindly trust every "YouAreDoomed.exe" or binary from shady sources. You still need to keep your brain turned on. If you don't, you alone bear the consequences.
 
-Ah, and by the way: I have no affiliation—business, personal, gambling-debt-related, or involving embarrassing photos—with VirusTotal. I wrote this script simply because I wanted one. It makes my life easier. And hopefully your's too. End of story.
+By the way: I have no affiliation—business, personal, gambling-debt-related, or involving embarrassing photos—with VirusTotal. I wrote this script simply because I wanted one. It makes my life easier. And hopefully your's too. End of story.
+
+And just to keep all those overpaid, underworked lawyers of the world happy, here’s the ultra-serious version of what I literally just said:
+
+This program is independent software and is not affiliated with, endorsed by, or sponsored by VirusTotal or its parent company, Chronicle Security Ireland Limited (a subsidiary of Alphabet Inc.). VirusTotal is a registered trademark of Chronicle Security Ireland Limited. This program merely utilizes the official VirusTotal API to provide its functionality.
+
 
 ## ## License
 
@@ -322,4 +347,5 @@ Also, check out my BLOG for news about Cybersecurity, Security Vulnerabilities, 
 
 ## ## History
 
+* **1.1.0 (2026-10-04):** Option "-s|--stop-on-match" added.
 * **1.0.0 (2026-07-26):** Initial version.

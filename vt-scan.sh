@@ -6,6 +6,7 @@
 # jynxified@proton.me
 # 
 # History:
+# 1.1.0 (2026-10-04) - Option "-s|--stop-on-match" added.
 # 1.0.0 (2026-07-26) - Initial version
 #
 # Disclaimer:
@@ -36,10 +37,14 @@ NC="\e[0m"
 ICON_MAIL="\U0001F4E7"
 ICON_GITHUB="\u2699\uFE0F"
 ICON_BLOG="\U0001F310"
+ICON_SKULL="\U0001F480"
+ICON_WARNING="\U0001F50D"
+ICON_OKAY="\u2705"
 
 # Variables
 P_API_KEY_FILE=""
 P_SCAN_THROTTLE_DELAY=0
+P_STOP_ON_MATCH="N"
 P_VERBOSE_MODE="N"
 P_ULTRA_VERBOSE_MODE="N"
 P_GRACE_ATTEMPTS=5
@@ -75,9 +80,9 @@ function showHelp {
     echo
     
     echo -e "----------------------------------------------------------------------------------"
-    echo -e "                        ${BOLD}Malware Scan Using VirusTotal API${NC}"
+    echo -e "                        ${BOLD}Malware Scan Using VirusTotal™ API${NC}"
     echo -e "----------------------------------------------------------------------------------"
-    echo -e "                                  ${BOLD}Version 1.0.0${NC}"
+    echo -e "                                  ${BOLD}Version 1.1.0${NC}"
     echo -e "----------------------------------------------------------------------------------"
     echo -e "    ${ICON_MAIL}jynxified@proton.me | ${ICON_GITHUB} ${BLUE}github.com/jynxified${NC} | ${ICON_BLOG}${BLUE}jynxified.wordpress.com${NC}"
     echo -e "----------------------------------------------------------------------------------"
@@ -106,6 +111,11 @@ function showHelp {
     echo -e "  ${MAGENTA}-m, --maxdepth DEPTH${NC}\t\t${BOLD}OPTIONAL${NC}. Maximum recursion depth for subdirectory file searches."
     echo -e "\t\t\t\tThe default value is $P_MAXDEPTH. The value 0 means no recursion."
     echo    
+    echo -e "  ${MAGENTA}-s, --stop-on-match${NC}\t\t${BOLD}OPTIONAL${NC}. This option tells the scan to stop immediately on the"
+    echo -e "\t\t\t\tfirst match (suspicious or malicious). If you omit it, vt-scan"
+    echo -e "\t\t\t\twill still report any matches, but it won't stop until it has"
+    echo -e "\t\t\t\tscanned every single file you passed to it."
+    echo    
     echo -e "  ${MAGENTA}-v, --verbose${NC}\t\t\t${BOLD}OPTIONAL${NC}. Debug mode. Display detailed status information for each"
     echo -e "\t\t\t\texecuted processing step. Without this option, only the result of"
     echo -e "\t\t\t\ta file scan is printed as a CSV-formatted line."
@@ -119,6 +129,11 @@ function showHelp {
     echo -e "\t\t\t\teffect if the -v or -vv option is also used."
     echo
     echo -e "Licensed under ${BOLD}CC BY-NC-ND 4.0${NC} (https://creativecommons.org/licenses/by-nc-nd/4.0/)"
+    echo
+    echo -e "${BOLD}Please note:${NC} This program is independent software and is not affiliated with, endorsed by, or sponsored"
+    echo -e "by VirusTotal or its parent company, Chronicle Security Ireland Limited (a subsidiary of Alphabet Inc.)."
+    echo -e "VirusTotal is a registered trademark of Chronicle Security Ireland Limited. This program merely utilizes"
+    echo -e "the official VirusTotal API to provide its functionality."
 }
 
 #
@@ -163,6 +178,10 @@ do
             validateParam $1 $2
             P_MAXDEPTH=$2
             shift 2
+            ;;
+        -s|--stop-on-match)
+            P_STOP_ON_MATCH="Y"
+            shift
             ;;
         -v|--verbose)
             P_VERBOSE_MODE="Y"
@@ -363,6 +382,7 @@ function getMalwareCertaintyLevel {
 #  - 0 : Scan was successful.
 #  - 1 : Scan report is queued, i.e., in progress.
 #  - 2 : Scan failed.
+#  - 3 : Match found, abort scan due to -s|--stop-on-match.
 #
 function scanFile {
 
@@ -454,6 +474,11 @@ function scanFile {
         
         logMessage 0 "\"$OVERALL_RESULT\"|$MALICIOUS_HITS|$SUSPICIOUS_HITS|$UNDETECTED_HITS|$HARMLESS_HITS|\"$FILE\""
         
+        if [[ "$P_STOP_ON_MATCH" == "Y" && ("$MALICIOUS_HITS" != 0 || "$SUSPICIOUS_HITS" != 0) ]]
+        then
+            return 3; # Abort scan due to -s|--stop-on-match
+        fi
+        
         return 0 # Scan successful
     
     elif [[ $(echo "$VT_SCAN_RESPONSE" | egrep -c "(QuotaExceededError|429 Too Many Requests)") != 0 ]]
@@ -544,6 +569,7 @@ do
     # Scan file.
     ((SCANNED_FILES_CNTR++))
 
+    ABORT_SCAN="N"
     while :
     do
     
@@ -565,12 +591,23 @@ do
                 fi
                 ((SKIPPED_CNTR++))
                 break
-            fi        
+            fi      
+        elif [[ "$RC_CODE" == 3 ]]
+        then
+            ABORT_SCAN="Y"
+            break
         else
             break
         fi
         
     done
+
+    # Abort scan due to -s|--stop-on-match
+    if [[ "$ABORT_SCAN" == "Y" ]]
+    then
+        logMessage 1 "${BLUE}[ SCAN ]${NC} ${YELLOW}Abort scan on first match...${NC}"
+        break
+    fi
     
     # Take a break before the next scan if throttling was configured.
     if [[ ($P_SCAN_THROTTLE_DELAY > 0) && ("$SCANNED_FILES_CNTR" != "$NUM_FILES") ]]
@@ -591,7 +628,7 @@ logMessage 1 "${BLUE}[STATUS]${NC} ${BOLD}$PROCESSED_PATHS_CNTR path(s) processe
 
 if [[ "$MALICIOUS_FILES_CNTR" > 0 ]]
 then
-    logMessage 1 "${BLUE}[RESULT]${NC} ${RED}${MALICIOUS_FILES_CNTR} malicious file(s) detected:${NC}"
+    logMessage 1 "${BLUE}[RESULT]${NC} ${ICON_SKULL} ${RED}${MALICIOUS_FILES_CNTR} malicious file(s) detected:${NC}"
     for MALICIOUS_FILE in "${MALICIOUS_FILES[@]}"
     do
         logMessage 1 "${BLUE}[RESULT]${NC}      ${RED}$MALICIOUS_FILE${NC}"
@@ -599,7 +636,7 @@ then
 fi
 if [[ "$SUSPICIOUS_FILES_CNTR" > 0 ]]
 then
-    logMessage 1 "${BLUE}[RESULT]${NC} ${YELLOW}${SUSPICIOUS_FILES_CNTR} suspicious file(s) detected:${NC}"
+    logMessage 1 "${BLUE}[RESULT]${NC} ${ICON_WARNING} ${YELLOW}${SUSPICIOUS_FILES_CNTR} suspicious file(s) detected:${NC}"
     for SUSPICIOUS_FILE in "${SUSPICIOUS_FILES[@]}"
     do
         logMessage 1 "${BLUE}[RESULT]${NC}      ${YELLOW}$SUSPICIOUS_FILE${NC}"
@@ -607,5 +644,5 @@ then
 fi
 if [[ "$MALICIOUS_FILES_CNTR" == 0 && "$SUSPICIOUS_FILES_CNTR" == 0 ]]
 then
-    logMessage 1 "${BLUE}[RESULT]${NC} ${GREEN}No malicious or suspicious files detected.${NC}"
+    logMessage 1 "${BLUE}[RESULT]${NC} ${ICON_OKAY} ${GREEN}No malicious or suspicious files detected.${NC}"
 fi
